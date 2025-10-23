@@ -1,11 +1,25 @@
 import { createClient } from '@/lib/supabaseClient';
 
-export async function ensureOwner(recordTable: string, recordId: string, ownerColumn = 'user_id') {
+export async function ensureOwner(
+  recordTable: string,
+  recordId: string,
+  ownerColumn = 'user_id'
+): Promise<boolean> {
   const supabase = createClient();
-  const user = (await supabase.auth.getUser()).data.user;
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
   if (!user) return false;
-  const { data } = await supabase.from(recordTable).select(ownerColumn).eq('id', recordId).maybeSingle();
-  if (!data) return false;
-  const rec = data as Record<string, unknown>;
-  return String(rec[ownerColumn as string]) === user.id;
+
+  // Loosen typing here to avoid Postgrest builder generics friction during typecheck.
+  const qb: any = (supabase as any)
+    .from(recordTable as any)
+    .select(ownerColumn)
+    .eq('id', recordId)
+    .limit(1);
+
+  const { data, error }: { data?: any; error?: any } = await qb.maybeSingle();
+  if (error || !data) return false;
+
+  const value = (data as Record<string, unknown>)[ownerColumn];
+  return typeof value === 'string' && value === user.id;
 }
