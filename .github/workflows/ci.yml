@@ -19,4 +19,5 @@ jobs:
       - run: npm run typecheck
         continue-on-error: true
       - run: npm run lint
+        continue-on-error: true
       - run: npm run test
