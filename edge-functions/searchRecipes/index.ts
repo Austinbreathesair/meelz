@@ -1,4 +1,4 @@
-import { makeKeyHash, twelveHoursMs } from '../../lib/cache';
+import { makeKeyHash } from '../../lib/cache';
 
 type Input = { ingredients: string[] };
 
@@ -22,10 +22,9 @@ export async function handler(req: Request) {
   // if (cached) return new Response(JSON.stringify(cached.payload), { headers: { 'content-type': 'application/json' }});
 
   const results = await externalFetch(normalized, process.env.RECIPE_API_KEY);
-  const payload = { results };
+  const payload = { results, keyHash };
 
   // await supabase.from('api_cache').upsert({ key_hash: keyHash, payload, expires_at: new Date(Date.now() + twelveHoursMs).toISOString() });
 
   return new Response(JSON.stringify(payload), { headers: { 'content-type': 'application/json' } });
 }
-

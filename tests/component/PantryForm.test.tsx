@@ -1,3 +1,4 @@
+/* eslint-env jest */
 import { render, screen } from '@testing-library/react';
 import PantryPage from '@/app/(authed)/pantry/page';
 
@@ -8,4 +9,3 @@ describe('Pantry form', () => {
     expect(screen.getByText('Add')).toBeInTheDocument();
   });
 });
-

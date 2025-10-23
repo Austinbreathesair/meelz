@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+/* eslint-env jest */
 import RecipePage from '@/app/(authed)/recipes/[id]/page';
 
 describe('Recipe detail', () => {
@@ -7,4 +7,3 @@ describe('Recipe detail', () => {
     expect(RecipePage).toBeDefined();
   });
 });
-
