@@ -1,7 +1,6 @@
 "use client";
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { createClient } from '@/lib/supabaseClient';
 
 export default function RecipesPage() {
   const [querying, setQuerying] = useState(false);
@@ -36,4 +35,3 @@ export default function RecipesPage() {
     </main>
   );
 }
-
