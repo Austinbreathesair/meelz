@@ -5,6 +5,7 @@ export async function ensureOwner(recordTable: string, recordId: string, ownerCo
   const user = (await supabase.auth.getUser()).data.user;
   if (!user) return false;
   const { data } = await supabase.from(recordTable).select(ownerColumn).eq('id', recordId).maybeSingle();
-  return data && data[ownerColumn] === user.id;
+  if (!data) return false;
+  const rec = data as Record<string, unknown>;
+  return String(rec[ownerColumn as string]) === user.id;
 }
-
