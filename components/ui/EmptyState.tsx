@@ -1,4 +1,4 @@
-import type { PropsWithChildren, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 export default function EmptyState({ title, description, action }: { title: ReactNode; description?: ReactNode; action?: ReactNode }) {
   return (
@@ -9,4 +9,3 @@ export default function EmptyState({ title, description, action }: { title: Reac
     </div>
   );
 }
-

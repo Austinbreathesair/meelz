@@ -8,7 +8,9 @@ export async function POST(req: NextRequest) {
   let body: Input = { ingredients: [] } as any;
   try {
     body = await req.json();
-  } catch {}
+  } catch (e) {
+    console.error(e);
+  }
   const ingredients = (body?.ingredients || [])
     .map((s) => String(s || '').trim().toLowerCase())
     .filter(Boolean);
@@ -57,7 +59,9 @@ export async function POST(req: NextRequest) {
           });
         }
       }
-    } catch {}
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   const results = Array.from(resultsMap.values()).slice(0, 30);
@@ -69,4 +73,3 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(payload);
 }
-

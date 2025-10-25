@@ -1,5 +1,6 @@
 "use client";
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import type React from 'react';
 type Series = { name: string; values: number[]; color: string };
 
 export default function BarChart({ labels, series, height = 160, currency = '$' }: { labels: string[]; series: Series[]; height?: number; currency?: string }) {
@@ -8,8 +9,10 @@ export default function BarChart({ labels, series, height = 160, currency = '$' 
   const [tip, setTip] = useState<{ x: number; y: number; html: string } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const onEnter = (i: number, e: React.MouseEvent) => {
-    const parts = series.map((s) => `<div><span style=\"display:inline-block;width:8px;height:8px;background:${s.color};border-radius:2px;margin-right:6px\"></span>${s.name}: ${currency}${(s.values[i] || 0).toFixed(2)}</div>`).join('');
-    const html = `<strong>${labels[i]}</strong>${parts ? `<div style=\"margin-top:4px\">${parts}</div>` : ''}`;
+    const parts = series
+      .map((s) => `<div><span style="display:inline-block;width:8px;height:8px;background:${s.color};border-radius:2px;margin-right:6px"></span>${s.name}: ${currency}${(s.values[i] || 0).toFixed(2)}</div>`) 
+      .join('');
+    const html = `<strong>${labels[i]}</strong>${parts ? `<div style="margin-top:4px">${parts}</div>` : ''}`;
     const rect = containerRef.current?.getBoundingClientRect();
     setTip({ x: (e.clientX - (rect?.left || 0)) + 8, y: (e.clientY - (rect?.top || 0)) - 24, html });
   };

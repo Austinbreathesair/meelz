@@ -31,7 +31,7 @@ export default function DashboardClient() {
     }
   };
 
-  useEffect(() => { load(days); }, []);
+  useEffect(() => { load(days); }, [days]);
 
   const hasData = !!data && (data.added.some((v) => v > 0) || data.used.some((v) => v > 0) || data.net.some((v) => v !== 0));
 

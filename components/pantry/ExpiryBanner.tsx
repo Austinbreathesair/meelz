@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useIndexedDb } from '@/hooks/useIndexedDb';
 
 function daysUntil(dateStr?: string | null) {
@@ -26,4 +26,3 @@ export function ExpiryBanner() {
     </div>
   );
 }
-

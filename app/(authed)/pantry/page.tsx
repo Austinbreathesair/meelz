@@ -59,7 +59,9 @@ export default function PantryPage() {
           }
         }
       }
-    } catch {}
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const removeItem = async (id: string) => {
@@ -78,7 +80,9 @@ export default function PantryPage() {
           await supabase.from('pantry_txn').insert({ user_id: uid, ingredient_name: it.name, pantry_item_id: id, delta_qty_canonical: -Math.abs(it.qty), unit_family: it.unit_family, reason: 'delete' });
         }
       }
-    } catch {}
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const startEdit = (it: any) => {
@@ -121,7 +125,9 @@ export default function PantryPage() {
           }
         }
       }
-    } catch {}
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   if (!user) return <div>Please sign in.</div>;
