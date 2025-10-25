@@ -80,18 +80,32 @@ export default function RecipesPage() {
         // Tags
         if (details.tags && details.tags.length) {
           for (const t of details.tags) {
-            const { data: tagRow } = await supabase.from('tag').insert({ name: t }).select('id').single().catch(async () => {
-              return await supabase.from('tag').select('id').eq('name', t).single();
-            });
-            if (tagRow?.id) await supabase.from('recipe_tag').insert({ recipe_id: recipeId, tag_id: tagRow.id }).catch(() => {});
+            let tagId: number | undefined;
+            try {
+              const { data: tagRow } = await supabase.from('tag').insert({ name: t }).select('id').single();
+              tagId = tagRow?.id;
+            } catch (e) {
+              const { data: tagRow } = await supabase.from('tag').select('id').eq('name', t).single();
+              tagId = tagRow?.id;
+            }
+            if (tagId) {
+              try { await supabase.from('recipe_tag').insert({ recipe_id: recipeId, tag_id: tagId }); } catch (e) { /* ignore dup */ }
+            }
           }
         }
         // Category
         if (details.category) {
-          const { data: catRow } = await supabase.from('category').insert({ name: details.category }).select('id').single().catch(async () => {
-            return await supabase.from('category').select('id').eq('name', details.category!).single();
-          });
-          if (catRow?.id) await supabase.from('recipe_category').insert({ recipe_id: recipeId, category_id: catRow.id }).catch(() => {});
+          let catId: number | undefined;
+          try {
+            const { data: catRow } = await supabase.from('category').insert({ name: details.category }).select('id').single();
+            catId = catRow?.id;
+          } catch (e) {
+            const { data: catRow } = await supabase.from('category').select('id').eq('name', details.category!).single();
+            catId = catRow?.id;
+          }
+          if (catId) {
+            try { await supabase.from('recipe_category').insert({ recipe_id: recipeId, category_id: catId }); } catch (e) { /* ignore dup */ }
+          }
         }
       }
       window.location.href = `/recipes/${data.id}`;
