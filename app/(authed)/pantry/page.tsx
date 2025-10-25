@@ -55,7 +55,11 @@ export default function PantryPage() {
           const amount = unit_price ? Number(qty) * unit_price : null;
           await supabase.from('pantry_txn').insert({ user_id: uid, pantry_item_id: id, ingredient_name: name, delta_qty_canonical: Number(qty), unit_family: family, reason: 'add', unit_price, amount });
           if (unit_price) {
-            await supabase.from('price_snapshot').insert({ user_id: uid, ingredient_key: name.toLowerCase(), unit_family: family, unit_price, source: 'manual', captured_at: new Date().toISOString().slice(0,10) }).catch(() => {});
+            try {
+              await supabase.from('price_snapshot').insert({ user_id: uid, ingredient_key: name.toLowerCase(), unit_family: family, unit_price, source: 'manual', captured_at: new Date().toISOString().slice(0,10) });
+            } catch (e) {
+              console.error(e);
+            }
           }
         }
       }
@@ -121,7 +125,11 @@ export default function PantryPage() {
           const amount = unit_price ? delta * unit_price : null;
           await supabase.from('pantry_txn').insert({ user_id: uid, pantry_item_id: it.id, ingredient_name: it.name, delta_qty_canonical: delta, unit_family: editDraft.unit_family, reason: 'adjust', unit_price, amount });
           if (unit_price) {
-            await supabase.from('price_snapshot').insert({ user_id: uid, ingredient_key: it.name.toLowerCase(), unit_family: editDraft.unit_family, unit_price, source: 'manual', captured_at: new Date().toISOString().slice(0,10) }).catch(() => {});
+            try {
+              await supabase.from('price_snapshot').insert({ user_id: uid, ingredient_key: it.name.toLowerCase(), unit_family: editDraft.unit_family, unit_price, source: 'manual', captured_at: new Date().toISOString().slice(0,10) });
+            } catch (e) {
+              console.error(e);
+            }
           }
         }
       }
