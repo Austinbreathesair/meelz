@@ -9,6 +9,7 @@ export interface PantryRow {
   unit?: string;
   unit_family?: 'mass' | 'volume' | 'count';
   updated_at?: number;
+  expiry_date?: string;
 }
 
 class MeelzDB extends Dexie {
