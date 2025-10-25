@@ -7,6 +7,7 @@ import { Card, CardBody } from '@/components/ui/Card';
 import { Page, PageHeader } from '@/components/ui/Page';
 import EmptyState from '@/components/ui/EmptyState';
 import { Badge } from '@/components/ui/Badge';
+import Image from 'next/image';
 
 export default function RecipesPage() {
   const [querying, setQuerying] = useState(false);
@@ -114,7 +115,7 @@ export default function RecipesPage() {
           <Card key={i}>
             <CardBody>
               <div className="flex gap-3">
-                {r.image_url && <img alt="thumb" src={r.image_url} className="w-16 h-16 object-cover rounded" />}
+                {r.image_url && <Image alt="thumb" src={r.image_url} width={64} height={64} className="w-16 h-16 object-cover rounded" />}
                 <div className="flex-1">
                   <h3 className="font-medium">{r.title ?? 'Recipe'}</h3>
                   <div className="mt-1 flex gap-1">

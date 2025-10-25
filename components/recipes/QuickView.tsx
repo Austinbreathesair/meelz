@@ -1,6 +1,7 @@
 "use client";
 import { Fragment, useEffect, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
+import Image from 'next/image';
 
 type Props = {
   mealId: string | null;
@@ -46,7 +47,7 @@ export default function QuickView({ mealId, open, onClose }: Props) {
                 {data && (
                   <div className="mt-3 space-y-3">
                     <div className="flex gap-3">
-                      {data.image_url && <img src={data.image_url} alt="meal" className="w-24 h-24 object-cover rounded" />}
+                      {data.image_url && <Image src={data.image_url} alt="meal" width={96} height={96} className="w-24 h-24 object-cover rounded" />}
                       <div>
                         <h3 className="text-xl font-semibold">{data.title}</h3>
                         {data.description && <p className="text-gray-600">{data.description}</p>}
@@ -81,4 +82,3 @@ export default function QuickView({ mealId, open, onClose }: Props) {
     </Transition>
   );
 }
-

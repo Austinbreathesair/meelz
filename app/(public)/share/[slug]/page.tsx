@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { Card, CardBody } from '@/components/ui/Card';
+import Image from 'next/image';
 
 export default async function SharePage({ params }: { params: { slug: string } }) {
   const h = headers();
@@ -17,7 +18,7 @@ export default async function SharePage({ params }: { params: { slug: string } }
         <h1 className="text-3xl font-bold tracking-tight">{recipe.title}</h1>
         {recipe.description && <p className="text-gray-700">{recipe.description}</p>}
       </div>
-      {recipe.image_url && <img src={recipe.image_url} alt={recipe.title} className="w-full max-w-2xl rounded" />}
+      {recipe.image_url && <Image src={recipe.image_url} alt={recipe.title} width={1024} height={768} className="w-full max-w-2xl h-auto rounded" />}
       {ingredients && ingredients.length > 0 && (
         <Card>
           <CardBody>

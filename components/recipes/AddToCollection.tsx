@@ -15,7 +15,7 @@ export default function AddToCollection({ recipeId }: { recipeId: string }) {
       const { data } = await supabase.from('collection').select('id, name').eq('user_id', uid).order('name');
       setCollections(data || []);
     })();
-  }, []);
+  }, [supabase]);
 
   const createAndAdd = async () => {
     const name = prompt('New collection name?');
@@ -50,4 +50,3 @@ export default function AddToCollection({ recipeId }: { recipeId: string }) {
     </div>
   );
 }
-

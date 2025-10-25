@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Page, PageHeader } from '@/components/ui/Page';
 import EmptyState from '@/components/ui/EmptyState';
+import Image from 'next/image';
 
 export default async function SavedRecipesPage({ searchParams }: { searchParams?: { fav?: string } }) {
   const supabase = createServerSupabaseClient();
@@ -42,7 +43,7 @@ export default async function SavedRecipesPage({ searchParams }: { searchParams?
           <Card key={r.id}>
             <CardBody>
               <div className="flex gap-3">
-                {r.image_url && <img src={r.image_url} alt="thumb" className="w-20 h-20 object-cover rounded" />}
+                {r.image_url && <Image src={r.image_url} alt="thumb" width={80} height={80} className="w-20 h-20 object-cover rounded" />}
                 <div>
                   <Link className="font-medium text-blue-700" href={`/recipes/${r.id}`}>{r.title}</Link>
                   {favIds.has(r.id) && <span className="ml-2 text-yellow-500">★</span>}

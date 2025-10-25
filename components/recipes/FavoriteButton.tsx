@@ -17,7 +17,7 @@ export default function FavoriteButton({ recipeId }: { recipeId: string }) {
       if (!ignore) { setFav(!!data); setLoading(false); }
     })();
     return () => { ignore = true; };
-  }, [recipeId]);
+  }, [supabase, recipeId]);
 
   const toggle = async () => {
     setLoading(true);
@@ -40,4 +40,3 @@ export default function FavoriteButton({ recipeId }: { recipeId: string }) {
     </button>
   );
 }
-

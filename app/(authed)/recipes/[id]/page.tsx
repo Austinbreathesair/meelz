@@ -5,6 +5,7 @@ import FavoriteButton from '@/components/recipes/FavoriteButton';
 import AddToCollection from '@/components/recipes/AddToCollection';
 import { Page, PageHeader } from '@/components/ui/Page';
 import { Card, CardBody } from '@/components/ui/Card';
+import Image from 'next/image';
 
 export default async function RecipeDetail({ params, searchParams }: { params: { id: string }, searchParams: { servings?: string } }) {
   const supabase = createServerSupabaseClient();
@@ -32,7 +33,7 @@ export default async function RecipeDetail({ params, searchParams }: { params: {
     <Page>
       <PageHeader title={recipe.title} subtitle={recipe.description} actions={<FavoriteButton recipeId={recipe.id} />} />
       {recipe.image_url && (
-        <img src={recipe.image_url} alt={recipe.title} className="w-full max-w-2xl rounded" />
+        <Image src={recipe.image_url} alt={recipe.title} width={1024} height={768} className="w-full max-w-2xl h-auto rounded" />
       )}
       <div>
         <span className="font-medium">Servings:</span> {servings}
