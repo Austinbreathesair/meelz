@@ -10,16 +10,17 @@ export function NavBar() {
   };
   return (
     <header className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b">
-      <div className="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between">
+      <div className="px-4 py-3 flex items-center justify-between">
         <nav className="flex items-center gap-4">
-          <Link href="/pantry" className="font-semibold">MEELZ</Link>
+          <Link href="/pantry" className="font-semibold tracking-tight">MEELZ</Link>
           <Link href="/pantry" className="text-sm text-gray-700">Pantry</Link>
           <Link href="/recipes" className="text-sm text-gray-700">Recipes</Link>
+          <Link href="/recipes/saved" className="text-sm text-gray-700">Saved</Link>
+          <Link href="/recipes/collections" className="text-sm text-gray-700">Collections</Link>
           <Link href="/dashboard" className="text-sm text-gray-700">Budget</Link>
         </nav>
-        <button onClick={signOut} className="text-sm rounded bg-gray-200 px-3 py-1">Sign out</button>
+        <button onClick={signOut} className="text-sm rounded bg-gray-200 px-3 py-1 hover:bg-gray-300">Sign out</button>
       </div>
     </header>
   );
 }
-

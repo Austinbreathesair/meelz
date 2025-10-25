@@ -1,12 +1,14 @@
 export default function LandingPage() {
   return (
     <main className="space-y-6">
-      <h1 className="text-3xl font-semibold">Meelz</h1>
-      <p className="text-gray-600">Pantry → Recipe PWA, offline-first.</p>
-      <a className="inline-block rounded bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700" href="/pantry">
-        Open Pantry
-      </a>
-      <p className="text-gray-700">Sign in to manage your pantry and discover recipes.</p>
+      <div className="text-center space-y-3 py-10">
+        <h1 className="text-4xl font-bold tracking-tight">Meelz</h1>
+        <p className="text-gray-600">Pantry → Recipe PWA, offline-first.</p>
+        <div className="flex justify-center gap-3">
+          <a className="inline-block rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700" href="/signin">Get started</a>
+          <a className="inline-block rounded bg-gray-200 px-4 py-2 hover:bg-gray-300" href="/pantry">Open Pantry</a>
+        </div>
+      </div>
     </main>
   );
 }

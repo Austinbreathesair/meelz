@@ -6,3 +6,10 @@ html, body {
   height: 100%;
 }
 
+:root {
+  --brand-600: #2563eb; /* blue-600 */
+  --brand-700: #1d4ed8; /* blue-700 */
+}
+
+.bg-brand { background-color: var(--brand-600); }
+.hover\:bg-brand-700:hover { background-color: var(--brand-700); }

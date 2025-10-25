@@ -36,5 +36,15 @@ export async function GET(req: NextRequest) {
     .eq('id', link.recipe_id)
     .maybeSingle();
   if (!recipe) return NextResponse.json({ error: 'Recipe not found' }, { status: 404 });
-  return NextResponse.json({ recipe });
+  const { data: ingredients } = await admin
+    .from('ingredient')
+    .select('name, qty, unit, unit_family, position')
+    .eq('recipe_id', recipe.id)
+    .order('position');
+  const { data: instructions } = await admin
+    .from('instruction')
+    .select('step_no, text')
+    .eq('recipe_id', recipe.id)
+    .order('step_no');
+  return NextResponse.json({ recipe, ingredients, instructions });
 }

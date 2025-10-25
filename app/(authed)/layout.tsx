@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 import { NavBar } from '@/components/ui/NavBar';
+import BottomNav from '@/components/ui/BottomNav';
 
 export default function AuthedLayout({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -13,9 +14,10 @@ export default function AuthedLayout({ children }: { children: ReactNode }) {
     </main>
   );
   return (
-    <div className="space-y-6">
+    <div className="pb-16 space-y-6">
       <NavBar />
       <div className="px-1">{children}</div>
+      <BottomNav />
     </div>
   );
 }

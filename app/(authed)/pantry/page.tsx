@@ -6,6 +6,12 @@ import { usePantrySync } from '@/hooks/usePantrySync';
 import { Button } from '@/components/ui/Button';
 import { createClient } from '@/lib/supabaseClient';
 import { ExpiryBanner } from '@/components/pantry/ExpiryBanner';
+import Input from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
+import { Badge } from '@/components/ui/Badge';
+import { Card, CardBody } from '@/components/ui/Card';
+import { Page, PageHeader } from '@/components/ui/Page';
+import EmptyState from '@/components/ui/EmptyState';
 
 export default function PantryPage() {
   const { user } = useAuth();
@@ -110,66 +116,73 @@ export default function PantryPage() {
   if (!user) return <div>Please sign in.</div>;
 
   return (
-    <main className="space-y-4">
-      <h1 className="text-2xl font-semibold">Pantry</h1>
+    <Page>
+      <PageHeader title="Pantry" subtitle="Manage ingredients with offline support and sync." />
       <ExpiryBanner />
       <div className="flex gap-2 items-center">
-        <input className="border rounded px-3 py-2 w-full" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search pantry" />
+        <Input className="w-full" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search pantry" />
       </div>
       <div className="flex flex-wrap gap-2 items-center">
-        <input className="border rounded px-3 py-2" value={name} onChange={(e) => setName(e.target.value)} placeholder="Item name" />
-        <input className="border rounded px-3 py-2 w-28" value={qty} onChange={(e) => setQty(e.target.value === '' ? '' : Number(e.target.value))} placeholder="Qty" />
-        <input className="border rounded px-3 py-2 w-24" value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="Unit" />
-        <select className="border rounded px-3 py-2" value={family} onChange={(e) => setFamily(e.target.value as any)}>
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Item name" />
+        <Input className="w-28" value={qty} onChange={(e) => setQty(e.target.value === '' ? '' : Number(e.target.value))} placeholder="Qty" />
+        <Input className="w-24" value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="Unit" />
+        <Select value={family} onChange={(e) => setFamily(e.target.value as any)}>
           <option value="">Family</option>
           <option value="mass">mass</option>
           <option value="volume">volume</option>
           <option value="count">count</option>
-        </select>
-        <input type="date" className="border rounded px-3 py-2" value={expiry} onChange={(e) => setExpiry(e.target.value)} />
+        </Select>
+        <Input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} />
         <Button onClick={addItem}>Add</Button>
       </div>
-      <ul className="divide-y rounded border bg-white">
+      {items.length === 0 ? (
+        <EmptyState title="Your pantry is empty" description="Add your first item to get smart recipe suggestions." action={<Button onClick={addItem}>Add sample</Button>} />
+      ) : (
+        <ul className="grid gap-3 sm:grid-cols-2">
         {items
           .filter((it) => it.name.toLowerCase().includes(q.toLowerCase()))
           .map((it) => (
-          <li key={it.id} className="p-3 flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span>
-                <span className="font-medium">{it.name}</span>
-                {it.qty != null && <> — {it.qty}{it.unit ? ` ${it.unit}` : ''}</>}
-                {it.expiry_date && <span className="ml-2 text-xs text-gray-500">(exp {it.expiry_date})</span>}
-              </span>
-              <div className="flex gap-3">
-                {editingId === it.id ? (
-                  <>
-                    <button className="text-blue-700" onClick={() => saveEdit(it)}>Save</button>
-                    <button className="text-gray-600" onClick={() => setEditingId(null)}>Cancel</button>
-                  </>
-                ) : (
-                  <>
-                    <button className="text-blue-700" onClick={() => startEdit(it)}>Edit</button>
-                    <button className="text-red-600" onClick={() => removeItem(it.id)}>Delete</button>
-                  </>
-                )}
+          <Card key={it.id} className="p-0">
+            <CardBody className="flex flex-col gap-2">
+              <div className="flex items-start justify-between">
+                <span>
+                <span className="font-medium mr-2">{it.name}</span>
+                {it.qty != null && <Badge>{it.qty}{it.unit ? ` ${it.unit}` : ''}</Badge>}
+                {it.unit_family && <Badge tone="gray" className="ml-1 uppercase">{it.unit_family}</Badge>}
+                {it.expiry_date && <Badge tone="amber" className="ml-2">exp {it.expiry_date}</Badge>}
+                </span>
+                <div className="flex gap-3">
+                  {editingId === it.id ? (
+                    <>
+                    <Button variant="primary" size="sm" onClick={() => saveEdit(it)}>Save</Button>
+                    <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>Cancel</Button>
+                    </>
+                  ) : (
+                    <>
+                    <Button variant="ghost" size="sm" onClick={() => startEdit(it)}>Edit</Button>
+                    <Button variant="danger" size="sm" onClick={() => removeItem(it.id)}>Delete</Button>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-            {editingId === it.id && (
-              <div className="flex flex-wrap gap-2">
-                <input className="border rounded px-2 py-1 w-24" placeholder="Qty" value={editDraft.qty as any} onChange={(e) => setEditDraft((s) => ({ ...s, qty: e.target.value === '' ? '' : Number(e.target.value) }))} />
-                <input className="border rounded px-2 py-1 w-24" placeholder="Unit" value={editDraft.unit || ''} onChange={(e) => setEditDraft((s) => ({ ...s, unit: e.target.value }))} />
-                <select className="border rounded px-2 py-1" value={editDraft.unit_family || ''} onChange={(e) => setEditDraft((s) => ({ ...s, unit_family: e.target.value as any }))}>
+              {editingId === it.id && (
+                <div className="flex flex-wrap gap-2">
+                <Input className="w-24" placeholder="Qty" value={editDraft.qty as any} onChange={(e) => setEditDraft((s) => ({ ...s, qty: (e.target as any).value === '' ? '' : Number((e.target as any).value) }))} />
+                <Input className="w-24" placeholder="Unit" value={editDraft.unit || ''} onChange={(e) => setEditDraft((s) => ({ ...s, unit: e.target.value }))} />
+                <Select value={editDraft.unit_family || ''} onChange={(e) => setEditDraft((s) => ({ ...s, unit_family: e.target.value as any }))}>
                   <option value="">Family</option>
                   <option value="mass">mass</option>
                   <option value="volume">volume</option>
                   <option value="count">count</option>
-                </select>
-                <input type="date" className="border rounded px-2 py-1" value={editDraft.expiry_date || ''} onChange={(e) => setEditDraft((s) => ({ ...s, expiry_date: e.target.value }))} />
-              </div>
-            )}
-          </li>
+                </Select>
+                <Input type="date" value={editDraft.expiry_date || ''} onChange={(e) => setEditDraft((s) => ({ ...s, expiry_date: e.target.value }))} />
+                </div>
+              )}
+            </CardBody>
+          </Card>
         ))}
       </ul>
-    </main>
+      )}
+    </Page>
   );
 }
