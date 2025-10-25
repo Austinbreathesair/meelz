@@ -9,7 +9,10 @@ export async function POST(req: NextRequest) {
   const fd = await req.formData();
   const name = String(fd.get('name') || '').trim();
   if (!name) return NextResponse.redirect(new URL('/recipes/collections', req.url));
-  await supabase.from('collection').insert({ user_id: uid, name }).single().catch(() => {});
+  try {
+    await supabase.from('collection').insert({ user_id: uid, name }).single();
+  } catch (e) {
+    // ignore duplicate names or errors; page will re-fetch
+  }
   return NextResponse.redirect(new URL('/recipes/collections', req.url));
 }
-

@@ -33,7 +33,7 @@ export default function AddToCollection({ recipeId }: { recipeId: string }) {
     // compute next position
     const { data: existing } = await supabase.from('collection_item').select('position').eq('collection_id', sel).order('position', { ascending: false }).limit(1);
     const pos = (existing?.[0]?.position ?? 0) + 1;
-    await supabase.from('collection_item').insert({ collection_id: sel, recipe_id: recipeId, position: pos }).catch(() => {});
+    try { await supabase.from('collection_item').insert({ collection_id: sel, recipe_id: recipeId, position: pos }); } catch (e) { /* ignore dup */ }
     alert('Added to collection');
   };
 
