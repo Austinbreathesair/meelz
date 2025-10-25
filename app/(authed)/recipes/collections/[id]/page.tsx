@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import type React from 'react';
@@ -12,7 +12,7 @@ export default function CollectionEditorPage({ params }: { params: { id: string 
   const [items, setItems] = useState<Array<{ recipe_id: string; title: string; image_url?: string | null; position: number }>>([]);
   const [name, setName] = useState('');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const { data: col } = await supabase.from('collection').select('name').eq('id', params.id).maybeSingle();
     setName(col?.name || '');
     const { data } = await supabase
@@ -22,9 +22,9 @@ export default function CollectionEditorPage({ params }: { params: { id: string 
       .order('position');
     const mapped = (data || []).map((row: any) => ({ recipe_id: row.recipe.id, title: row.recipe.title, image_url: row.recipe.image_url, position: row.position }));
     setItems(mapped);
-  };
+  }, [supabase, params.id]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const onDragStart = (e: React.DragEvent<HTMLLIElement>, idx: number) => {
     e.dataTransfer.setData('text/plain', String(idx));
@@ -58,7 +58,7 @@ export default function CollectionEditorPage({ params }: { params: { id: string 
           <Card key={it.recipe_id}>
             <CardBody>
               <li draggable onDragStart={(e) => onDragStart(e, i)} onDrop={(e) => onDrop(e, i)} className="flex items-center gap-3">
-                {it.image_url && <img src={it.image_url} className="w-14 h-14 object-cover rounded" />}
+            {it.image_url && <img src={it.image_url} alt="Recipe" className="w-14 h-14 object-cover rounded" />}
                 <span className="flex-1">{it.title}</span>
                 <Button variant="danger" size="sm" onClick={() => remove(it.recipe_id)}>Remove</Button>
               </li>
