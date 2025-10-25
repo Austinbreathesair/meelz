@@ -6,6 +6,7 @@ import QuickView from '@/components/recipes/QuickView';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Page, PageHeader } from '@/components/ui/Page';
 import EmptyState from '@/components/ui/EmptyState';
+import { Badge } from '@/components/ui/Badge';
 
 export default function RecipesPage() {
   const [querying, setQuerying] = useState(false);
@@ -13,6 +14,7 @@ export default function RecipesPage() {
   const db = useIndexedDb();
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [meta, setMeta] = useState<Record<string, any>>({});
 
   const search = async () => {
     setQuerying(true);
@@ -23,6 +25,13 @@ export default function RecipesPage() {
       if (res.ok) {
         const data = await res.json();
         setResults(data.results ?? []);
+        // Prefetch details for first 8 results to show category
+        const first = (data.results ?? []).slice(0, 8);
+        const { fetchMealDetails } = await import('@/lib/mealdb');
+        const entries = await Promise.all(first.map(async (r: any) => [r.id || r.source_ref, await fetchMealDetails(r.id || r.source_ref)] as const));
+        const m: Record<string, any> = {};
+        for (const [id, det] of entries) if (id && det) m[id] = det;
+        setMeta(m);
       }
     } finally {
       setQuerying(false);
@@ -106,7 +115,13 @@ export default function RecipesPage() {
             <CardBody>
               <div className="flex gap-3">
                 {r.image_url && <img alt="thumb" src={r.image_url} className="w-16 h-16 object-cover rounded" />}
-                <h3 className="font-medium self-center">{r.title ?? 'Recipe'}</h3>
+                <div className="flex-1">
+                  <h3 className="font-medium">{r.title ?? 'Recipe'}</h3>
+                  <div className="mt-1 flex gap-1">
+                    {meta[r.id || r.source_ref]?.category && <Badge tone="green">{meta[r.id || r.source_ref].category}</Badge>}
+                    {Array.isArray(meta[r.id || r.source_ref]?.tags) && meta[r.id || r.source_ref].tags.slice(0,2).map((t: string, i: number) => <Badge key={i}>{t}</Badge>)}
+                  </div>
+                </div>
               </div>
               <div className="mt-2 flex gap-2">
                 <Button onClick={() => save(r)}>Save</Button>

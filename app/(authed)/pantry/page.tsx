@@ -25,7 +25,8 @@ export default function PantryPage() {
   const [expiry, setExpiry] = useState('');
   const [q, setQ] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState<{ qty?: number | ''; unit?: string; unit_family?: 'mass'|'volume'|'count'|''; expiry_date?: string }>({});
+  const [editDraft, setEditDraft] = useState<{ qty?: number | ''; unit?: string; unit_family?: 'mass'|'volume'|'count'|''; expiry_date?: string; unit_price?: number | '' }>({});
+  const [unitPrice, setUnitPrice] = useState<number | ''>('');
 
   useEffect(() => {
     db?.pantry.toArray().then(setItems);
@@ -50,7 +51,12 @@ export default function PantryPage() {
       if (uid) {
         await supabase.from('pantry_item').upsert({ id, user_id: uid, name, qty: qty === '' ? null : Number(qty), unit: unit || null, unit_family: (family as any) || null, expiry_date: expiry || null });
         if (qty !== '' && family) {
-          await supabase.from('pantry_txn').insert({ user_id: uid, pantry_item_id: id, ingredient_name: name, delta_qty_canonical: Number(qty), unit_family: family, reason: 'add' });
+          const unit_price = unitPrice === '' ? null : Number(unitPrice);
+          const amount = unit_price ? Number(qty) * unit_price : null;
+          await supabase.from('pantry_txn').insert({ user_id: uid, pantry_item_id: id, ingredient_name: name, delta_qty_canonical: Number(qty), unit_family: family, reason: 'add', unit_price, amount });
+          if (unit_price) {
+            await supabase.from('price_snapshot').insert({ user_id: uid, ingredient_key: name.toLowerCase(), unit_family: family, unit_price, source: 'manual', captured_at: new Date().toISOString().slice(0,10) }).catch(() => {});
+          }
         }
       }
     } catch {}
@@ -77,7 +83,7 @@ export default function PantryPage() {
 
   const startEdit = (it: any) => {
     setEditingId(it.id);
-    setEditDraft({ qty: it.qty ?? '', unit: it.unit ?? '', unit_family: (it.unit_family as any) ?? '', expiry_date: it.expiry_date ?? '' });
+    setEditDraft({ qty: it.qty ?? '', unit: it.unit ?? '', unit_family: (it.unit_family as any) ?? '', expiry_date: it.expiry_date ?? '', unit_price: '' });
   };
 
   const saveEdit = async (it: any) => {
@@ -107,7 +113,12 @@ export default function PantryPage() {
         const oldQty = (old?.qty ?? 0) as number;
         const delta = (newQty ?? 0) - oldQty;
         if (delta !== 0 && (editDraft.unit_family as any)) {
-          await supabase.from('pantry_txn').insert({ user_id: uid, pantry_item_id: it.id, ingredient_name: it.name, delta_qty_canonical: delta, unit_family: editDraft.unit_family, reason: 'adjust' });
+          const unit_price = editDraft.unit_price === '' ? null : Number(editDraft.unit_price as any);
+          const amount = unit_price ? delta * unit_price : null;
+          await supabase.from('pantry_txn').insert({ user_id: uid, pantry_item_id: it.id, ingredient_name: it.name, delta_qty_canonical: delta, unit_family: editDraft.unit_family, reason: 'adjust', unit_price, amount });
+          if (unit_price) {
+            await supabase.from('price_snapshot').insert({ user_id: uid, ingredient_key: it.name.toLowerCase(), unit_family: editDraft.unit_family, unit_price, source: 'manual', captured_at: new Date().toISOString().slice(0,10) }).catch(() => {});
+          }
         }
       }
     } catch {}
@@ -133,6 +144,7 @@ export default function PantryPage() {
           <option value="count">count</option>
         </Select>
         <Input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} />
+        <Input className="w-36" placeholder={`Price/${family || 'unit'}`} value={unitPrice} onChange={(e) => setUnitPrice((e.target as any).value === '' ? '' : Number((e.target as any).value))} />
         <Button onClick={addItem}>Add</Button>
       </div>
       {items.length === 0 ? (
@@ -151,7 +163,7 @@ export default function PantryPage() {
                 {it.unit_family && <Badge tone="gray" className="ml-1 uppercase">{it.unit_family}</Badge>}
                 {it.expiry_date && <Badge tone="amber" className="ml-2">exp {it.expiry_date}</Badge>}
                 </span>
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   {editingId === it.id ? (
                     <>
                     <Button variant="primary" size="sm" onClick={() => saveEdit(it)}>Save</Button>
@@ -160,6 +172,20 @@ export default function PantryPage() {
                   ) : (
                     <>
                     <Button variant="ghost" size="sm" onClick={() => startEdit(it)}>Edit</Button>
+                    <Button variant="secondary" size="sm" onClick={async () => {
+                      const priceStr = prompt(`Set price per ${it.unit || 'unit'} for ${it.name}`);
+                      if (!priceStr) return;
+                      const price = Number(priceStr);
+                      if (!Number.isFinite(price) || price <= 0) return alert('Invalid price');
+                      const supabase = createClient();
+                      const { data: userData } = await supabase.auth.getUser();
+                      const uid = userData.user?.id;
+                      if (!uid) return;
+                      const fam = (it.unit_family as any) || (prompt('Enter unit family (mass|volume|count):') as any);
+                      if (!fam || !['mass','volume','count'].includes(fam)) return alert('Invalid family');
+                      await supabase.from('price_snapshot').insert({ user_id: uid, ingredient_key: it.name.toLowerCase(), unit_family: fam, unit_price: price, source: 'manual', captured_at: new Date().toISOString().slice(0,10) });
+                      alert('Price saved');
+                    }}>Price</Button>
                     <Button variant="danger" size="sm" onClick={() => removeItem(it.id)}>Delete</Button>
                     </>
                   )}
@@ -176,6 +202,7 @@ export default function PantryPage() {
                   <option value="count">count</option>
                 </Select>
                 <Input type="date" value={editDraft.expiry_date || ''} onChange={(e) => setEditDraft((s) => ({ ...s, expiry_date: e.target.value }))} />
+                <Input className="w-28" placeholder={`Price/${family || 'unit'}`} value={editDraft.unit_price as any} onChange={(e) => setEditDraft((s) => ({ ...s, unit_price: (e.target as any).value === '' ? '' : Number((e.target as any).value) }))} />
                 </div>
               )}
             </CardBody>
