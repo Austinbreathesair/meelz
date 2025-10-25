@@ -1,26 +1,15 @@
-import { createClient } from '@/lib/supabaseClient';
 import Link from 'next/link';
+import { headers } from 'next/headers';
 
 export default async function SharePage({ params }: { params: { slug: string } }) {
-  const supabase = createClient();
-  const { data: link } = await supabase
-    .from('share_link')
-    .select('recipe_id, expires_at')
-    .eq('slug', params.slug)
-    .maybeSingle();
-
-  if (!link) {
-    return <div>Link not found or expired.</div>;
-  }
-
-  const { data: recipe } = await supabase
-    .from('recipe')
-    .select('id, title, description, image_url, base_servings')
-    .eq('id', link.recipe_id)
-    .maybeSingle();
-
+  const h = headers();
+  const host = h.get('x-forwarded-host') || h.get('host');
+  const proto = h.get('x-forwarded-proto') || 'http';
+  const base = `${proto}://${host}`;
+  const res = await fetch(`${base}/api/share?slug=${params.slug}`, { cache: 'no-store' });
+  if (!res.ok) return <div>Link not found or expired.</div>;
+  const { recipe } = await res.json();
   if (!recipe) return <div>Recipe unavailable.</div>;
-
   return (
     <main className="space-y-4">
       <h1 className="text-2xl font-semibold">{recipe.title}</h1>
@@ -29,4 +18,3 @@ export default async function SharePage({ params }: { params: { slug: string } }
     </main>
   );
 }
-

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabaseClient';
 import { scaleIngredients } from '@/lib/units';
+import Link from 'next/link';
 
 export default async function RecipeDetail({ params, searchParams }: { params: { id: string }, searchParams: { servings?: string } }) {
   const supabase = createClient();
@@ -25,12 +26,24 @@ export default async function RecipeDetail({ params, searchParams }: { params: {
       <div>
         <span className="font-medium">Servings:</span> {servings}
       </div>
+      <div>
+        <form action="" method="get" className="flex gap-2 items-center">
+          <input type="number" name="servings" defaultValue={servings} className="border rounded px-3 py-1 w-24" />
+          <button className="px-3 py-1 rounded bg-gray-200">Scale</button>
+        </form>
+      </div>
       <ul className="list-disc pl-6">
         {scaled.map((it, idx) => (
           <li key={idx}>{it.qty != null ? `${it.qty} ` : ''}{it.unit ?? ''} {it.name}</li>
         ))}
       </ul>
+      <form action="/api/share" method="post" className="pt-4">
+        <input type="hidden" name="recipeId" value={recipe.id} />
+        <button className="px-4 py-2 rounded bg-blue-600 text-white">Create Share Link</button>
+      </form>
+      <div>
+        <Link className="text-blue-700 underline" href="/recipes">Back to search</Link>
+      </div>
     </main>
   );
 }
-

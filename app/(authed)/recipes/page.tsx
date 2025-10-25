@@ -18,6 +18,19 @@ export default function RecipesPage() {
       setQuerying(false);
     }
   };
+  const save = async (r: any) => {
+    try {
+      const supabase = (await import('@/lib/supabaseClient')).createClient();
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) return alert('Sign in');
+      const { data, error } = await supabase.from('recipe').insert({ author_id: uid, source: 'api', title: r.title || 'Untitled', base_servings: 2 }).select('id').single();
+      if (error) return alert(error.message);
+      window.location.href = `/recipes/${data.id}`;
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
     <main className="space-y-4">
@@ -29,6 +42,9 @@ export default function RecipesPage() {
         {results.map((r, i) => (
           <li key={i} className="rounded border bg-white p-3">
             <h3 className="font-medium">{r.title ?? 'Recipe'}</h3>
+            <div className="mt-2">
+              <Button onClick={() => save(r)}>Save</Button>
+            </div>
           </li>
         ))}
       </ul>

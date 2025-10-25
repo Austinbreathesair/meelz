@@ -16,6 +16,7 @@ class MeelzDB extends Dexie {
   constructor() {
     super('meelz');
     this.version(1).stores({ pantry: 'id, name, updated_at' });
+    this.version(2).stores({ pantry: 'id, name, updated_at, expiry_date' });
   }
 }
 
@@ -23,4 +24,3 @@ export function useIndexedDb() {
   const db = useMemo(() => new MeelzDB(), []);
   return db;
 }
-
