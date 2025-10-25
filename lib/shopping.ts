@@ -37,7 +37,7 @@ export function aggregateIngredients(ings: RecipeIng[]): RecipeIng[] {
     let qty = ing.qty ?? 0;
     let unit: string | null = ing.unit ?? null;
     if (canon && unit && unit !== canon) {
-      try { qty = convertQty(qty, unit, canon, fam as UnitFamily); unit = canon; } catch {}
+      try { qty = convertQty(qty, unit, canon, fam as UnitFamily); unit = canon; } catch (e) { void e; }
     } else if (canon) {
       unit = canon;
     }
@@ -81,7 +81,7 @@ export function computeShoppingList(pantry: PantryItem[], ings: RecipeIng[]): Sh
     const pantryFamily = p.unit_family ?? null;
 
     if (pantryFamily && desiredFamily && pantryFamily === desiredFamily && pantryUnit && desiredUnit && pantryUnit !== desiredUnit) {
-      try { pantryQty = convertQty(pantryQty, pantryUnit, desiredUnit, pantryFamily); } catch {}
+      try { pantryQty = convertQty(pantryQty, pantryUnit, desiredUnit, pantryFamily); } catch (e) { void e; }
     }
 
     const need = desiredQty - (Number.isFinite(pantryQty) ? pantryQty : 0);

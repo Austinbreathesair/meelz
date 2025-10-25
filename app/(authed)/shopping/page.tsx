@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabaseClient';
 import { Page, PageHeader } from '@/components/ui/Page';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
 import { computeShoppingListMerged } from '@/lib/shopping';
 
@@ -26,7 +25,7 @@ export default function ShoppingPage() {
       const { data: p } = await supabase.from('pantry_item').select('name, qty, unit, unit_family').eq('user_id', uid);
       setPantry(p || []);
     })();
-  }, []);
+  }, [supabase]);
 
   const loadIngredients = async () => {
     const ids = Object.keys(selected).filter((k) => selected[k]);
@@ -46,7 +45,7 @@ export default function ShoppingPage() {
   }, [list]);
 
   const copy = async () => {
-    try { await navigator.clipboard.writeText(exportText); alert('Copied to clipboard'); } catch {}
+    try { await navigator.clipboard.writeText(exportText); alert('Copied to clipboard'); } catch (e) { console.error(e); }
   };
 
   return (
