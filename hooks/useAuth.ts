@@ -7,11 +7,10 @@ export function useAuth() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => setUser(session?.user ?? null));
-    return () => sub.subscription.unsubscribe();
+    supabase.auth.getUser().then((res: any) => setUser(res?.data?.user ?? null));
+    const { data: authSub }: any = supabase.auth.onAuthStateChange((_e: any, session: any) => setUser(session?.user ?? null));
+    return () => authSub?.subscription?.unsubscribe?.();
   }, []);
 
   return { user };
 }
-
