@@ -1,11 +1,14 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabaseClient';
+import { Button } from '@/components/ui/Button';
+import Select from '@/components/ui/Select';
 
 export default function AddToCollection({ recipeId }: { recipeId: string }) {
   const supabase = createClient();
   const [collections, setCollections] = useState<Array<{ id: string; name: string }>>([]);
   const [sel, setSel] = useState<string>('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -20,33 +23,52 @@ export default function AddToCollection({ recipeId }: { recipeId: string }) {
   const createAndAdd = async () => {
     const name = prompt('New collection name?');
     if (!name) return;
-    const { data: userData } = await supabase.auth.getUser();
-    const uid = userData.user?.id!;
-    const { data, error } = await supabase.from('collection').insert({ user_id: uid, name }).select('id').single();
-    if (error) return alert(error.message);
-    setCollections((c) => [...c, { id: data.id, name }]);
-    setSel(data.id);
+    setLoading(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id!;
+      const { data, error } = await supabase.from('collection').insert({ user_id: uid, name }).select('id').single();
+      if (error) {
+        console.error('Error creating collection:', error);
+        alert(`Failed to create collection: ${error.message}`);
+        return;
+      }
+      setCollections((c) => [...c, { id: data.id, name }]);
+      setSel(data.id);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const add = async () => {
     if (!sel) return;
-    // compute next position
-    const { data: existing } = await supabase.from('collection_item').select('position').eq('collection_id', sel).order('position', { ascending: false }).limit(1);
-    const pos = (existing?.[0]?.position ?? 0) + 1;
-    try { await supabase.from('collection_item').insert({ collection_id: sel, recipe_id: recipeId, position: pos }); } catch (e) { /* ignore dup */ }
-    alert('Added to collection');
+    setLoading(true);
+    try {
+      // compute next position
+      const { data: existing } = await supabase.from('collection_item').select('position').eq('collection_id', sel).order('position', { ascending: false }).limit(1);
+      const pos = (existing?.[0]?.position ?? 0) + 1;
+      const { error } = await supabase.from('collection_item').insert({ collection_id: sel, recipe_id: recipeId, position: pos });
+      if (error) {
+        console.error('Error adding to collection:', error);
+        alert(`Failed to add to collection: ${error.message}`);
+      } else {
+        alert('✓ Added to collection');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <select className="border rounded px-2 py-1" value={sel} onChange={(e) => setSel(e.target.value)}>
+    <div className="flex flex-wrap items-center gap-2">
+      <Select className="flex-1 min-w-[200px]" value={sel} onChange={(e) => setSel(e.target.value)}>
         <option value="">Select collection</option>
         {collections.map((c) => (
           <option key={c.id} value={c.id}>{c.name}</option>
         ))}
-      </select>
-      <button className="px-3 py-1 rounded bg-gray-200" onClick={createAndAdd}>New</button>
-      <button className="px-3 py-1 rounded bg-blue-600 text-white" onClick={add} disabled={!sel}>Add</button>
+      </Select>
+      <Button variant="secondary" size="sm" onClick={createAndAdd} disabled={loading}>+ New</Button>
+      <Button size="sm" onClick={add} disabled={!sel || loading}>Add to Collection</Button>
     </div>
   );
 }

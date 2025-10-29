@@ -14,10 +14,12 @@ export default function AuthedLayout({ children }: { children: ReactNode }) {
     </main>
   );
   return (
-    <div className="pb-20">
+    <>
       <NavBar />
-      {children}
-      <BottomNav />
-    </div>
+      <div className="pb-20 lg:pb-6">{children}</div>
+      <div className="lg:hidden">
+        <BottomNav />
+      </div>
+    </>
   );
 }

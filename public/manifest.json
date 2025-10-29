@@ -1,13 +1,28 @@
 {
-  "name": "Meelz",
+  "name": "Meelz - Smart Kitchen Manager",
   "short_name": "Meelz",
-  "start_url": "/",
+  "description": "Manage your pantry, discover recipes, and track your budget - even offline",
+  "start_url": "/pantry",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "theme_color": "#14b8a6",
+  "orientation": "portrait",
+  "scope": "/",
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
-  ]
+    { 
+      "src": "/icons/icon-192.png", 
+      "sizes": "192x192", 
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    { 
+      "src": "/icons/icon-512.png", 
+      "sizes": "512x512", 
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "food"],
+  "screenshots": []
 }
 
