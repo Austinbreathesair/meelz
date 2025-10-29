@@ -1,11 +1,9 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabaseClient';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function SignInPage() {
-  const router = useRouter();
   const supabase = createClient();
   const [mounted, setMounted] = useState(false);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
