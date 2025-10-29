@@ -1,36 +1,114 @@
 "use client";
-export const dynamic = 'force-dynamic';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabaseClient';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function SignInPage() {
+  const router = useRouter();
   const supabase = createClient();
+  const [mounted, setMounted] = useState(false);
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(true);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
+
+  // Fix hydration error by only rendering after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const signIn = async () => {
-    setLoading(true); setError(null);
+    setLoading(true); 
+    setError(null);
+    setSuccess(null);
+    
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) setError(error.message);
-    else {
+    
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
       const uid = data.user?.id;
       if (uid) {
         await supabase.from('profile').upsert({ id: uid, display_name: email.split('@')[0] }, { onConflict: 'id' });
       }
+      // Use window.location for a full page refresh to ensure session is set
       window.location.href = '/pantry';
     }
   };
 
+  const signUp = async () => {
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    // Validation
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      setLoading(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${siteUrl}/auth/callback`,
+        data: {
+          display_name: email.split('@')[0],
+        }
+      }
+    });
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      // Create profile
+      const uid = data.user?.id;
+      if (uid) {
+        await supabase.from('profile').upsert({ id: uid, display_name: email.split('@')[0] }, { onConflict: 'id' });
+      }
+      
+      // Check if email confirmation is required
+      if (data.user && !data.session) {
+        setSuccess('Check your email for a confirmation link!');
+        setLoading(false);
+      } else {
+        // Auto sign-in enabled - use window.location for full page refresh
+        window.location.href = '/pantry';
+      }
+    }
+  };
+
   const signInWith = async (provider: 'google') => {
-    setLoading(true); setError(null);
+    setLoading(true); 
+    setError(null);
+    setSuccess(null);
+    
     try {
-      const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${siteUrl}/pantry` } });
+      const { error } = await supabase.auth.signInWithOAuth({ 
+        provider, 
+        options: { 
+          redirectTo: `${siteUrl}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        } 
+      });
       if (error) setError(error.message);
     } finally {
       setLoading(false);
@@ -38,13 +116,60 @@ export default function SignInPage() {
   };
 
   const handleKeyPress = (e: { key: string }) => {
-    if (e.key === 'Enter') signIn();
+    if (e.key === 'Enter') {
+      mode === 'signin' ? signIn() : signUp();
+    }
   };
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-hero">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
+          <div className="text-center text-gray-600">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-hero">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
-        <h1 className="text-4xl font-bold text-center bg-gradient-aqua bg-clip-text text-transparent mb-8">LOGIN</h1>
+        {/* Mode Toggle */}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => {
+              setMode('signin');
+              setError(null);
+              setSuccess(null);
+            }}
+            className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
+              mode === 'signin'
+                ? 'bg-gradient-aqua text-white shadow-md'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Sign In
+          </button>
+          <button
+            onClick={() => {
+              setMode('signup');
+              setError(null);
+              setSuccess(null);
+            }}
+            className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
+              mode === 'signup'
+                ? 'bg-gradient-aqua text-white shadow-md'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Sign Up
+          </button>
+        </div>
+
+        <h1 className="text-4xl font-bold text-center bg-gradient-aqua bg-clip-text text-transparent mb-8">
+          {mode === 'signin' ? 'LOGIN' : 'CREATE ACCOUNT'}
+        </h1>
         
         <div className="space-y-4">
           {/* Email Input */}
@@ -81,19 +206,40 @@ export default function SignInPage() {
             />
           </div>
 
-          {/* Remember Me */}
-          <div className="flex items-center">
-            <input
-              id="remember-me"
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 text-aquamarine-500 focus:ring-aquamarine-500 border-gray-300 rounded cursor-pointer"
-            />
-            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-600 cursor-pointer">
-              Remember me
-            </label>
-          </div>
+          {/* Confirm Password (Sign Up only) */}
+          {mode === 'signup' && (
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <input
+                type="password"
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full pl-10 pr-4 py-3 bg-gray-100 border-0 rounded-lg focus:ring-2 focus:ring-aquamarine-500 focus:bg-white transition-all outline-none text-gray-900"
+              />
+            </div>
+          )}
+
+          {/* Remember Me (Sign In only) */}
+          {mode === 'signin' && (
+            <div className="flex items-center">
+              <input
+                id="remember-me"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 text-aquamarine-500 focus:ring-aquamarine-500 border-gray-300 rounded cursor-pointer"
+              />
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-600 cursor-pointer">
+                Remember me
+              </label>
+            </div>
+          )}
 
           {/* Error Message */}
           {error && (
@@ -102,13 +248,20 @@ export default function SignInPage() {
             </div>
           )}
 
-          {/* Login Button */}
+          {/* Success Message */}
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+              {success}
+            </div>
+          )}
+
+          {/* Submit Button */}
           <button
-            onClick={signIn}
+            onClick={mode === 'signin' ? signIn : signUp}
             disabled={loading}
             className="w-full bg-gradient-aqua hover:shadow-lg hover:shadow-aquamarine-500/50 text-white font-semibold py-3 rounded-lg shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'SIGNING IN...' : 'LOGIN'}
+            {loading ? (mode === 'signin' ? 'SIGNING IN...' : 'CREATING ACCOUNT...') : (mode === 'signin' ? 'LOGIN' : 'SIGN UP')}
           </button>
 
           {/* Divider */}
@@ -117,7 +270,9 @@ export default function SignInPage() {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or login with</span>
+              <span className="px-2 bg-white text-gray-500">
+                Or {mode === 'signin' ? 'login' : 'sign up'} with
+              </span>
             </div>
           </div>
 
@@ -137,14 +292,11 @@ export default function SignInPage() {
           </button>
         </div>
 
-        {/* Sign Up Link */}
+        {/* Back to Landing Link */}
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            Not a member?{' '}
-            <Link href="/landing" className="text-aquamarine-600 hover:text-aquamarine-700 font-semibold underline">
-              Sign up now
-            </Link>
-          </p>
+          <Link href="/landing" className="text-sm text-gray-600 hover:text-aquamarine-600 transition-colors">
+            ← Back to home
+          </Link>
         </div>
       </div>
     </div>

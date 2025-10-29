@@ -1,10 +1,9 @@
 /// <reference lib="webworker" />
 export type {}
 
-const CACHE = 'meelz-cache-v2';
+const CACHE = 'meelz-cache-v3';
 const APP_SHELL = [
-  '/',
-  '/manifest.json'
+  '/manifest.json' // Don't cache root as it redirects
 ];
 
 self.addEventListener('install', (event: any) => {
@@ -26,7 +25,11 @@ self.addEventListener('fetch', (event: any) => {
   }
   if ((req as any).cache === 'only-if-cached' && (req as any).mode !== 'same-origin') return;
   event.respondWith(
-    caches.match(req).then((cached) => cached || fetch(req).then((res) => {
+    caches.match(req).then((cached) => cached || fetch(req, { redirect: 'follow' }).then((res) => {
+      // Don't cache redirect responses
+      if (res.type === 'opaqueredirect' || (res.status >= 300 && res.status < 400)) {
+        return res;
+      }
       try {
         const resClone = res.clone();
         caches.open(CACHE).then((cache) => cache.put(req, resClone)).catch(() => {});
