@@ -14,7 +14,14 @@ export default function SignInPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(true);
-  const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  
+  // Get the correct site URL for OAuth redirects
+  const getSiteUrl = () => {
+    if (typeof window !== 'undefined') {
+      return window.location.origin;
+    }
+    return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  };
 
   // Fix hydration error by only rendering after mount
   useEffect(() => {
@@ -63,7 +70,7 @@ export default function SignInPage() {
       email,
       password,
       options: {
-        emailRedirectTo: `${siteUrl}/auth/callback`,
+        emailRedirectTo: `${getSiteUrl()}/auth/callback`,
         data: {
           display_name: email.split('@')[0],
         }
@@ -100,7 +107,7 @@ export default function SignInPage() {
       const { error } = await supabase.auth.signInWithOAuth({ 
         provider, 
         options: { 
-          redirectTo: `${siteUrl}/auth/callback`,
+          redirectTo: `${getSiteUrl()}/auth/callback`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
