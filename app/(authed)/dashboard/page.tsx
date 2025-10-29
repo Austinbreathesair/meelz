@@ -1,10 +1,14 @@
 import DashboardClient from '@/components/dashboard/DashboardClient';
+import { Page, PageHeader } from '@/components/ui/Page';
 
 export default function DashboardPage() {
   return (
-    <main className="space-y-6">
-      <h1 className="text-2xl font-semibold">Budget Dashboard</h1>
+    <Page>
+      <PageHeader 
+        title="Budget Dashboard" 
+        subtitle="Track your pantry spending and usage over time."
+      />
       <DashboardClient />
-    </main>
+    </Page>
   );
 }

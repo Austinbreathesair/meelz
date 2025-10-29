@@ -17,7 +17,7 @@ export default function DashboardClient() {
   const [days, setDays] = useState(7);
   const [data, setData] = useState<Report | null>(null);
   const [loading, setLoading] = useState(false);
-  const currency = (process.env.NEXT_PUBLIC_CURRENCY as string) || '$';
+  const currency = 'R'; // South African Rand
 
   const load = async (d: number) => {
     setLoading(true);
@@ -53,9 +53,9 @@ export default function DashboardClient() {
       )}
       {!loading && data && hasData && (
         <div className="space-y-6">
-          <section className="rounded border bg-white p-4">
-            <h2 className="font-medium mb-2">Last {data.range} days</h2>
-            <div className="text-sm text-gray-600 mb-2">Added: {currency}{data.summary.total_added.toFixed(2)} • Used: {currency}{data.summary.total_used.toFixed(2)} • Net: {currency}{data.summary.total_net.toFixed(2)}</div>
+          <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 className="font-semibold text-lg text-gray-900 mb-3">Last {data.range} days</h2>
+            <div className="text-sm text-gray-600 mb-4">Added: {currency}{data.summary.total_added.toFixed(2)} • Used: {currency}{data.summary.total_used.toFixed(2)} • Net: {currency}{data.summary.total_net.toFixed(2)}</div>
             <BarChart currency={currency} labels={data.labels} series={[{ name: 'Added', values: data.added, color: '#10b981' }, { name: 'Used', values: data.used, color: '#ef4444' }, { name: 'Net', values: data.net, color: '#3b82f6' }]} />
           </section>
         </div>

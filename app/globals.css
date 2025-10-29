@@ -4,12 +4,17 @@
 
 html, body {
   height: 100%;
+  background-color: #fafafa;
 }
 
 :root {
-  --brand-600: #2563eb; /* blue-600 */
-  --brand-700: #1d4ed8; /* blue-700 */
+  --brand-600: #14b8a6; /* aquamarine-500 */
+  --brand-700: #0d9488; /* aquamarine-600 */
+  --brand-gradient: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
+  --hero-gradient: linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #14b8a6 100%);
 }
 
 .bg-brand { background-color: var(--brand-600); }
 .hover\:bg-brand-700:hover { background-color: var(--brand-700); }
+.bg-gradient-aqua { background-image: var(--brand-gradient); }
+.bg-gradient-hero { background-image: var(--hero-gradient); }

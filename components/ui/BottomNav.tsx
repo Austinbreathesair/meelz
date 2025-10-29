@@ -14,14 +14,14 @@ const items: ReadonlyArray<{ href: Route; label: string; icon: 'pantry' | 'recip
 export default function BottomNav() {
   const pathname = usePathname();
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-20 border-t bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+    <nav className="fixed bottom-0 inset-x-0 z-20 border-t border-gray-200 bg-white shadow-lg">
       <ul className="grid grid-cols-4 gap-1 px-2 py-2">
         {items.map((it) => {
           const active = pathname?.startsWith(it.href);
           return (
             <li key={it.href} className="text-center">
-              <Link href={it.href} className={`block text-sm px-2 py-1 rounded ${active ? 'text-blue-700 font-medium' : 'text-gray-700'}`}>
-                <div className="flex flex-col items-center gap-0.5">
+              <Link href={it.href} className={`block text-xs px-2 py-2 rounded-lg transition-colors ${active ? 'text-aquamarine-600 font-semibold bg-aquamarine-50' : 'text-gray-600 hover:text-aquamarine-500'}`}>
+                <div className="flex flex-col items-center gap-1">
                   <Icon name={it.icon} filled={active} />
                   <span>{it.label}</span>
                 </div>

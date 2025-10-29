@@ -3,6 +3,8 @@ import { scaleIngredients } from '@/lib/units';
 import Link from 'next/link';
 import FavoriteButton from '@/components/recipes/FavoriteButton';
 import AddToCollection from '@/components/recipes/AddToCollection';
+import ShoppingList from '@/components/recipes/ShoppingList';
+import ShareRecipe from '@/components/recipes/ShareRecipe';
 import { Page, PageHeader } from '@/components/ui/Page';
 import { Card, CardBody } from '@/components/ui/Card';
 import Image from 'next/image';
@@ -66,15 +68,16 @@ export default async function RecipeDetail({ params, searchParams }: { params: {
           </CardBody>
         </Card>
       )}
-      <form action="/api/share" method="post" className="pt-4">
-        <input type="hidden" name="recipeId" value={recipe.id} />
-        <button className="px-4 py-2 rounded bg-blue-600 text-white">Create Share Link</button>
-      </form>
-      <div className="pt-2">
+      
+      <ShoppingList recipeId={recipe.id} recipeIngredients={scaled} />
+      
+      <div className="flex flex-wrap gap-3">
+        <ShareRecipe recipeId={recipe.id} recipeTitle={recipe.title} />
         <AddToCollection recipeId={recipe.id} />
       </div>
+      
       <div>
-        <Link className="text-blue-700 underline" href="/recipes">Back to search</Link>
+        <Link className="text-aquamarine-700 hover:text-aquamarine-800 underline font-medium" href="/recipes">← Back to search</Link>
       </div>
     </Page>
   );

@@ -31,29 +31,40 @@ export default async function SavedRecipesPage({ searchParams }: { searchParams?
 
   return (
     <Page>
-      <PageHeader title="Saved Recipes" subtitle="Your saved and favourite recipes." />
-      <div className="text-sm text-gray-600">
-        <Link className="underline" href={favOnly ? '/recipes/saved' : '/recipes/saved?fav=1'}>{favOnly ? 'Show all' : 'Show favourites only'}</Link>
-      </div>
+      <PageHeader 
+        title="Saved Recipes" 
+        subtitle="Your saved and favourite recipes."
+        actions={
+          <Link className="text-sm text-aquamarine-600 hover:text-aquamarine-700 font-medium underline" href={favOnly ? '/recipes/saved' : '/recipes/saved?fav=1'}>
+            {favOnly ? '← Show all' : '⭐ Favourites only'}
+          </Link>
+        }
+      />
       {(recipes ?? []).length === 0 ? (
         <EmptyState title="No saved recipes yet" description="Search and save recipes to see them here." />
       ) : (
-      <ul className="grid gap-3 grid-cols-1 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {(recipes ?? []).map((r) => (
-          <Card key={r.id}>
-            <CardBody>
-              <div className="flex gap-3">
-                {r.image_url && <Image src={r.image_url} alt="thumb" width={80} height={80} className="w-20 h-20 object-cover rounded" />}
-                <div>
-                  <Link className="font-medium text-blue-700" href={`/recipes/${r.id}`}>{r.title}</Link>
-                  {favIds.has(r.id) && <span className="ml-2 text-yellow-500">★</span>}
-                  {r.description && <p className="text-sm text-gray-600">{r.description}</p>}
+          <Link key={r.id} href={`/recipes/${r.id}`}>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+              <CardBody>
+                <div className="flex flex-col gap-3">
+                  {r.image_url && (
+                    <Image src={r.image_url} alt="thumb" width={300} height={200} className="w-full h-40 object-cover rounded-lg" />
+                  )}
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between">
+                      <h3 className="font-semibold text-gray-900 line-clamp-2">{r.title}</h3>
+                      {favIds.has(r.id) && <span className="text-xl">⭐</span>}
+                    </div>
+                    {r.description && <p className="text-sm text-gray-600 mt-2 line-clamp-2">{r.description}</p>}
+                  </div>
                 </div>
-              </div>
-            </CardBody>
-          </Card>
+              </CardBody>
+            </Card>
+          </Link>
         ))}
-      </ul>
+      </div>
       )}
     </Page>
   );

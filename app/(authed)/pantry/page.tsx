@@ -16,7 +16,7 @@ import EmptyState from '@/components/ui/EmptyState';
 export default function PantryPage() {
   const { user } = useAuth();
   const db = useIndexedDb();
-  const { syncNow } = usePantrySync();
+  const { syncNow, syncDown } = usePantrySync();
   const [items, setItems] = useState<Array<{ id: string; name: string; qty?: number; unit?: string; unit_family?: 'mass'|'volume'|'count'; expiry_date?: string }>>([]);
   const [name, setName] = useState('');
   const [qty, setQty] = useState<number | ''>('');
@@ -27,10 +27,20 @@ export default function PantryPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<{ qty?: number | ''; unit?: string; unit_family?: 'mass'|'volume'|'count'|''; expiry_date?: string; unit_price?: number | '' }>({});
   const [unitPrice, setUnitPrice] = useState<number | ''>('');
+  const [syncing, setSyncing] = useState(false);
 
+  // Initial load: sync from Supabase first, then display
   useEffect(() => {
-    db?.pantry.toArray().then(setItems);
-  }, [db]);
+    const loadData = async () => {
+      if (!db) return;
+      // First sync down from Supabase
+      await syncDown();
+      // Then load from IndexedDB
+      const allItems = await db.pantry.toArray();
+      setItems(allItems);
+    };
+    loadData();
+  }, [db, syncDown]);
 
   const addItem = async () => {
     if (!db || !name) return;
@@ -146,6 +156,20 @@ export default function PantryPage() {
       <ExpiryBanner />
       <div className="flex gap-2 items-center">
         <Input className="w-full" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search pantry" />
+        <Button 
+          variant="secondary" 
+          size="sm" 
+          onClick={async () => {
+            setSyncing(true);
+            await syncDown();
+            const allItems = await db?.pantry.toArray();
+            if (allItems) setItems(allItems);
+            setSyncing(false);
+          }}
+          disabled={syncing}
+        >
+          {syncing ? '↻' : '⟳'} Sync
+        </Button>
       </div>
       <div className="flex flex-wrap gap-2 items-center">
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Item name" />

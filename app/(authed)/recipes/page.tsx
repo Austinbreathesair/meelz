@@ -1,5 +1,6 @@
 "use client";
 import { useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { useIndexedDb } from '@/hooks/useIndexedDb';
 import QuickView from '@/components/recipes/QuickView';
@@ -116,36 +117,48 @@ export default function RecipesPage() {
 
   return (
     <Page>
-      <PageHeader title="Recipes" subtitle="Search suggestions based on your pantry." actions={<a className="underline text-sm" href="/recipes/saved">View saved</a>} />
-      <div className="text-sm text-gray-600"><a className="underline" href="/recipes/saved">View saved recipes</a></div>
-      <div className="flex gap-2">
-        <Button disabled={querying} onClick={search}>{querying ? 'Searching…' : 'Search From Pantry'}</Button>
-      </div>
+      <PageHeader 
+        title="Recipes" 
+        subtitle="Search suggestions based on your pantry." 
+        actions={
+          <Link href="/recipes/saved" className="text-sm text-aquamarine-600 hover:text-aquamarine-700 font-medium underline">
+            View saved →
+          </Link>
+        }
+      />
+      <Card>
+        <CardBody>
+          <Button variant="gradient" disabled={querying} onClick={search} size="lg">
+            {querying ? '🔍 Searching…' : '🔍 Search From Pantry'}
+          </Button>
+        </CardBody>
+      </Card>
       {results.length === 0 ? (
-        <EmptyState title="No results yet" description="Search from your pantry to discover recipes." />
+        <EmptyState 
+          title="No results yet" 
+          description="Click 'Search From Pantry' to discover recipes you can make with your ingredients."
+        />
       ) : (
-      <ul className="grid gap-3 grid-cols-1 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {results.map((r, i) => (
-          <Card key={i}>
-            <CardBody>
-              <div className="flex gap-3">
-                {r.image_url && <Image alt="thumb" src={r.image_url} width={64} height={64} className="w-16 h-16 object-cover rounded" />}
-                <div className="flex-1">
-                  <h3 className="font-medium">{r.title ?? 'Recipe'}</h3>
-                  <div className="mt-1 flex gap-1">
-                    {meta[r.id || r.source_ref]?.category && <Badge tone="green">{meta[r.id || r.source_ref].category}</Badge>}
-                    {Array.isArray(meta[r.id || r.source_ref]?.tags) && meta[r.id || r.source_ref].tags.slice(0,2).map((t: string, i: number) => <Badge key={i}>{t}</Badge>)}
-                  </div>
+          <Card key={i} className="hover:shadow-md transition-shadow">
+            <CardBody className="space-y-3">
+              {r.image_url && <Image alt="thumb" src={r.image_url} width={300} height={200} className="w-full h-40 object-cover rounded-lg" />}
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900">{r.title ?? 'Recipe'}</h3>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {meta[r.id || r.source_ref]?.category && <Badge tone="aquamarine">{meta[r.id || r.source_ref].category}</Badge>}
+                  {Array.isArray(meta[r.id || r.source_ref]?.tags) && meta[r.id || r.source_ref].tags.slice(0,2).map((t: string, i: number) => <Badge key={i} tone="gray">{t}</Badge>)}
                 </div>
               </div>
-              <div className="mt-2 flex gap-2">
-                <Button onClick={() => save(r)}>Save</Button>
-                <Button variant="secondary" onClick={() => { setPreviewId(r.id || r.source_ref); setOpen(true); }}>Quick View</Button>
+              <div className="flex gap-2">
+                <Button onClick={() => save(r)} size="sm" className="flex-1">💾 Save</Button>
+                <Button variant="secondary" onClick={() => { setPreviewId(r.id || r.source_ref); setOpen(true); }} size="sm" className="flex-1">👁 Preview</Button>
               </div>
             </CardBody>
           </Card>
         ))}
-      </ul>
+      </div>
       )}
       <QuickView mealId={previewId} open={open} onClose={() => setOpen(false)} />
     </Page>
