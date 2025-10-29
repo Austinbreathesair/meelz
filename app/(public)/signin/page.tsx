@@ -37,7 +37,7 @@ export default function SignInPage() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: { key: string }) => {
     if (e.key === 'Enter') signIn();
   };
 

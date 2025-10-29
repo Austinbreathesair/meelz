@@ -33,51 +33,108 @@ export default async function RecipeDetail({ params, searchParams }: { params: {
 
   return (
     <Page>
-      <PageHeader title={recipe.title} subtitle={recipe.description} actions={<FavoriteButton recipeId={recipe.id} />} />
-      {recipe.image_url && (
-        <Image src={recipe.image_url} alt={recipe.title} width={1024} height={768} className="w-full max-w-2xl h-auto rounded" />
-      )}
-      <div>
-        <span className="font-medium">Servings:</span> {servings}
-      </div>
-      <div>
-        <form action="" method="get" className="flex gap-2 items-center">
-          <input type="number" name="servings" defaultValue={servings} className="border rounded px-3 py-1 w-24" />
-          <button className="px-3 py-1 rounded bg-gray-200">Scale</button>
-        </form>
-      </div>
+      <PageHeader 
+        title={recipe.title} 
+        subtitle={recipe.description}
+        actions={<FavoriteButton recipeId={recipe.id} />}
+      />
+
+      {/* Recipe Overview Card with Image and Ingredients */}
       <Card>
         <CardBody>
-          <h2 className="text-xl font-semibold mb-2">Ingredients</h2>
-          <ul className="list-disc pl-6">
-            {scaled.map((it, idx) => (
-              <li key={idx}>{it.qty != null ? `${it.qty} ` : ''}{it.unit ?? ''} {it.name}</li>
-            ))}
-          </ul>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Left: Image */}
+            <div className="space-y-4">
+              {recipe.image_url && (
+                <Image 
+                  src={recipe.image_url} 
+                  alt={recipe.title} 
+                  width={500} 
+                  height={400} 
+                  className="w-full h-80 object-cover rounded-lg shadow-md"
+                />
+              )}
+              
+              {/* Servings Control */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <form action="" method="get" className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700">Servings:</label>
+                    <span className="text-lg font-semibold text-aquamarine-600">{servings}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <input 
+                      type="number" 
+                      name="servings" 
+                      defaultValue={servings} 
+                      min="1"
+                      className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-center font-medium"
+                    />
+                    <button className="px-5 py-2 rounded-lg bg-aquamarine-500 text-white hover:bg-aquamarine-600 transition-colors font-medium">
+                      Scale
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            {/* Right: Ingredients */}
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <span>🥘</span> Ingredients
+              </h2>
+              <ul className="space-y-2">
+                {scaled.map((it, idx) => (
+                  <li key={idx} className="flex items-start gap-3 p-2 rounded hover:bg-gray-50 transition-colors">
+                    <span className="text-aquamarine-500 mt-1">•</span>
+                    <span className="flex-1">
+                      {it.qty != null && <span className="font-semibold text-gray-900">{it.qty} </span>}
+                      {it.unit && <span className="text-gray-600">{it.unit} </span>}
+                      <span className="text-gray-800">{it.name}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </CardBody>
       </Card>
+
+      {/* Instructions Card */}
       {instructions && instructions.length > 0 && (
         <Card>
           <CardBody>
-            <h2 className="text-xl font-semibold mb-2">Instructions</h2>
-            <ol className="list-decimal pl-6 space-y-1">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <span>👨‍🍳</span> Instructions
+            </h2>
+            <ol className="space-y-4">
               {instructions.map((s, i) => (
-                <li key={i}>{s.text}</li>
+                <li key={i} className="flex gap-4">
+                  <span className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-aqua text-white flex items-center justify-center font-semibold text-sm">
+                    {i + 1}
+                  </span>
+                  <p className="flex-1 text-gray-700 leading-relaxed pt-1">{s.text}</p>
+                </li>
               ))}
             </ol>
           </CardBody>
         </Card>
       )}
       
-      <ShoppingList recipeId={recipe.id} recipeIngredients={scaled} />
+      {/* Shopping List */}
+      <ShoppingList recipeIngredients={scaled} />
       
+      {/* Actions */}
       <div className="flex flex-wrap gap-3">
         <ShareRecipe recipeId={recipe.id} recipeTitle={recipe.title} />
         <AddToCollection recipeId={recipe.id} />
       </div>
       
-      <div>
-        <Link className="text-aquamarine-700 hover:text-aquamarine-800 underline font-medium" href="/recipes">← Back to search</Link>
+      {/* Back Link */}
+      <div className="pt-4 border-t border-gray-200">
+        <Link className="text-aquamarine-600 hover:text-aquamarine-700 font-medium inline-flex items-center gap-2" href="/recipes">
+          <span>←</span> Back to search
+        </Link>
       </div>
     </Page>
   );

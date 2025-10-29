@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createClient } from '@/lib/supabaseClient';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -13,12 +13,10 @@ type Ingredient = {
 };
 
 type ShoppingListProps = {
-  recipeId: string;
   recipeIngredients: Ingredient[];
 };
 
-export default function ShoppingList({ recipeId, recipeIngredients }: ShoppingListProps) {
-  const [pantryItems, setPantryItems] = useState<any[]>([]);
+export default function ShoppingList({ recipeIngredients }: ShoppingListProps) {
   const [shoppingList, setShoppingList] = useState<Ingredient[]>([]);
   const [available, setAvailable] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(false);
@@ -42,8 +40,6 @@ export default function ShoppingList({ recipeId, recipeIngredients }: ShoppingLi
       .from('pantry_item')
       .select('*')
       .eq('user_id', uid);
-
-    setPantryItems(pantry || []);
 
     // Compare recipe ingredients with pantry
     const missing: Ingredient[] = [];

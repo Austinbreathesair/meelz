@@ -64,7 +64,7 @@ export default function CollectionsPage() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: { key: string; preventDefault: () => void }) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       createCollection();
