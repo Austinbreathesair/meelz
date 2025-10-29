@@ -54,16 +54,42 @@ export default function CollectionEditorPage({ params }: { params: { id: string 
   return (
     <Page>
       <PageHeader title={`Collection: ${name || '…'}`} subtitle={<Link className="text-blue-700 underline" href="/recipes/collections">Back to collections</Link>} />
-      <ul onDragOver={onDragOver} className="space-y-2">
+      <ul onDragOver={onDragOver} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((it, i) => (
-          <Card key={it.recipe_id}>
-            <CardBody>
-              <li draggable onDragStart={(e) => onDragStart(e, i)} onDrop={(e) => onDrop(e, i)} className="flex items-center gap-3">
-                {it.image_url && (
-                  <Image src={it.image_url} alt="Recipe" width={56} height={56} className="w-14 h-14 object-cover rounded" />
-                )}
-                <span className="flex-1">{it.title}</span>
-                <Button variant="danger" size="sm" onClick={() => remove(it.recipe_id)}>Remove</Button>
+          <Card key={it.recipe_id} className="hover:shadow-lg transition-shadow">
+            <CardBody className="p-0">
+              <li draggable onDragStart={(e) => onDragStart(e, i)} onDrop={(e) => onDrop(e, i)} className="cursor-move">
+                <Link href={`/recipes/${it.recipe_id}`} className="block">
+                  {it.image_url && (
+                    <Image 
+                      src={it.image_url} 
+                      alt={it.title} 
+                      width={400} 
+                      height={250} 
+                      className="w-full h-48 object-cover rounded-t-lg" 
+                    />
+                  )}
+                  <div className="p-4">
+                    <h3 className="font-semibold text-gray-900 hover:text-aquamarine-600 transition-colors">
+                      {it.title}
+                    </h3>
+                  </div>
+                </Link>
+                <div className="px-4 pb-4 pt-0">
+                  <Button 
+                    variant="danger" 
+                    size="sm" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (confirm(`Remove "${it.title}" from collection?`)) {
+                        remove(it.recipe_id);
+                      }
+                    }}
+                    className="w-full"
+                  >
+                    🗑️ Remove
+                  </Button>
+                </div>
               </li>
             </CardBody>
           </Card>

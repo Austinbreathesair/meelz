@@ -28,6 +28,7 @@ export default function PantryPage() {
   const [editDraft, setEditDraft] = useState<{ qty?: number | ''; unit?: string; unit_family?: 'mass'|'volume'|'count'|''; expiry_date?: string; unit_price?: number | '' }>({});
   const [unitPrice, setUnitPrice] = useState<number | ''>('');
   const [syncing, setSyncing] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Initial load: sync from Supabase first, then display
   useEffect(() => {
@@ -188,64 +189,129 @@ export default function PantryPage() {
       {items.length === 0 ? (
         <EmptyState title="Your pantry is empty" description="Add your first item to get smart recipe suggestions." action={<Button onClick={addItem}>Add sample</Button>} />
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
+        <ul className="space-y-2">
         {items
           .filter((it) => it.name.toLowerCase().includes(q.toLowerCase()))
-          .map((it) => (
-          <Card key={it.id} className="p-0">
-            <CardBody className="flex flex-col gap-2">
-              <div className="flex items-start justify-between">
-                <span>
-                <span className="font-medium mr-2">{it.name}</span>
-                {it.qty != null && <Badge>{it.qty}{it.unit ? ` ${it.unit}` : ''}</Badge>}
-                {it.unit_family && <Badge tone="gray" className="ml-1 uppercase">{it.unit_family}</Badge>}
-                {it.expiry_date && <Badge tone="amber" className="ml-2">exp {it.expiry_date}</Badge>}
-                </span>
-                <div className="flex gap-2">
-                  {editingId === it.id ? (
-                    <>
-                    <Button variant="primary" size="sm" onClick={() => saveEdit(it)}>Save</Button>
-                    <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>Cancel</Button>
-                    </>
-                  ) : (
-                    <>
-                    <Button variant="ghost" size="sm" onClick={() => startEdit(it)}>Edit</Button>
-                    <Button variant="secondary" size="sm" onClick={async () => {
-                      const priceStr = prompt(`Set price per ${it.unit || 'unit'} for ${it.name}`);
-                      if (!priceStr) return;
-                      const price = Number(priceStr);
-                      if (!Number.isFinite(price) || price <= 0) return alert('Invalid price');
-                      const supabase = createClient();
-                      const { data: userData } = await supabase.auth.getUser();
-                      const uid = userData.user?.id;
-                      if (!uid) return;
-                      const fam = (it.unit_family as any) || (prompt('Enter unit family (mass|volume|count):') as any);
-                      if (!fam || !['mass','volume','count'].includes(fam)) return alert('Invalid family');
-                      await supabase.from('price_snapshot').insert({ user_id: uid, ingredient_key: it.name.toLowerCase(), unit_family: fam, unit_price: price, source: 'manual', captured_at: new Date().toISOString().slice(0,10) });
-                      alert('Price saved');
-                    }}>Price</Button>
-                    <Button variant="danger" size="sm" onClick={() => removeItem(it.id)}>Delete</Button>
-                    </>
+          .map((it) => {
+            const isExpanded = expandedId === it.id;
+            const isEditing = editingId === it.id;
+            
+            return (
+              <Card key={it.id} className="overflow-hidden">
+                <CardBody className="p-0">
+                  {/* Accordion Header - Always visible */}
+                  <button
+                    onClick={() => setExpandedId(isExpanded ? null : it.id)}
+                    className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <div className="flex-1 flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-gray-900">{it.name}</span>
+                      {it.qty != null && <Badge tone="aquamarine">{it.qty}{it.unit ? ` ${it.unit}` : ''}</Badge>}
+                      {it.expiry_date && <Badge tone="amber">Exp: {it.expiry_date}</Badge>}
+                    </div>
+                    <svg 
+                      className={`w-5 h-5 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {/* Accordion Body - Shows when expanded */}
+                  {isExpanded && (
+                    <div className="border-t border-gray-200 p-4 bg-gray-50 space-y-4">
+                      {/* Item Details */}
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <span className="text-gray-600">Quantity:</span>
+                          <span className="ml-2 font-medium">{it.qty ?? 'N/A'} {it.unit || ''}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Unit Family:</span>
+                          <Badge tone="gray" className="ml-2 uppercase">{it.unit_family || 'N/A'}</Badge>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-gray-600">Expiry Date:</span>
+                          <span className="ml-2 font-medium">{it.expiry_date || 'Not set'}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Edit Form */}
+                      {isEditing && (
+                        <div className="space-y-3 p-4 bg-white rounded-lg border border-gray-200">
+                          <h4 className="font-medium text-gray-900">Edit Item</h4>
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            <Input 
+                              placeholder="Qty" 
+                              value={editDraft.qty as any} 
+                              onChange={(e) => setEditDraft((s) => ({ ...s, qty: (e.target as any).value === '' ? '' : Number((e.target as any).value) }))} 
+                            />
+                            <Input 
+                              placeholder="Unit" 
+                              value={editDraft.unit || ''} 
+                              onChange={(e) => setEditDraft((s) => ({ ...s, unit: e.target.value }))} 
+                            />
+                            <Select 
+                              value={editDraft.unit_family || ''} 
+                              onChange={(e) => setEditDraft((s) => ({ ...s, unit_family: e.target.value as any }))}
+                            >
+                              <option value="">Family</option>
+                              <option value="mass">mass</option>
+                              <option value="volume">volume</option>
+                              <option value="count">count</option>
+                            </Select>
+                            <Input 
+                              type="date" 
+                              value={editDraft.expiry_date || ''} 
+                              onChange={(e) => setEditDraft((s) => ({ ...s, expiry_date: e.target.value }))} 
+                            />
+                            <Input 
+                              placeholder={`Price per ${editDraft.unit || 'unit'}`} 
+                              value={editDraft.unit_price as any} 
+                              onChange={(e) => setEditDraft((s) => ({ ...s, unit_price: (e.target as any).value === '' ? '' : Number((e.target as any).value) }))} 
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Action Buttons */}
+                      <div className="flex flex-wrap gap-2">
+                        {isEditing ? (
+                          <>
+                            <Button variant="primary" size="sm" onClick={() => saveEdit(it)}>💾 Save</Button>
+                            <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>✕ Cancel</Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button variant="secondary" size="sm" onClick={() => startEdit(it)}>✏️ Edit</Button>
+                            <Button variant="secondary" size="sm" onClick={async () => {
+                              const priceStr = prompt(`Set price per ${it.unit || 'unit'} for ${it.name}`);
+                              if (!priceStr) return;
+                              const price = Number(priceStr);
+                              if (!Number.isFinite(price) || price <= 0) return alert('Invalid price');
+                              const supabase = createClient();
+                              const { data: userData } = await supabase.auth.getUser();
+                              const uid = userData.user?.id;
+                              if (!uid) return;
+                              const fam = (it.unit_family as any) || (prompt('Enter unit family (mass|volume|count):') as any);
+                              if (!fam || !['mass','volume','count'].includes(fam)) return alert('Invalid family');
+                              await supabase.from('price_snapshot').insert({ user_id: uid, ingredient_key: it.name.toLowerCase(), unit_family: fam, unit_price: price, source: 'manual', captured_at: new Date().toISOString().slice(0,10) });
+                              alert('Price saved');
+                            }}>💰 Set Price</Button>
+                            <Button variant="danger" size="sm" onClick={() => {
+                              if (confirm(`Delete ${it.name}?`)) removeItem(it.id);
+                            }}>🗑️ Delete</Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   )}
-                </div>
-              </div>
-              {editingId === it.id && (
-                <div className="flex flex-wrap gap-2">
-                <Input className="w-24" placeholder="Qty" value={editDraft.qty as any} onChange={(e) => setEditDraft((s) => ({ ...s, qty: (e.target as any).value === '' ? '' : Number((e.target as any).value) }))} />
-                <Input className="w-24" placeholder="Unit" value={editDraft.unit || ''} onChange={(e) => setEditDraft((s) => ({ ...s, unit: e.target.value }))} />
-                <Select value={editDraft.unit_family || ''} onChange={(e) => setEditDraft((s) => ({ ...s, unit_family: e.target.value as any }))}>
-                  <option value="">Family</option>
-                  <option value="mass">mass</option>
-                  <option value="volume">volume</option>
-                  <option value="count">count</option>
-                </Select>
-                <Input type="date" value={editDraft.expiry_date || ''} onChange={(e) => setEditDraft((s) => ({ ...s, expiry_date: e.target.value }))} />
-                <Input className="w-28" placeholder={`Price/${family || 'unit'}`} value={editDraft.unit_price as any} onChange={(e) => setEditDraft((s) => ({ ...s, unit_price: (e.target as any).value === '' ? '' : Number((e.target as any).value) }))} />
-                </div>
-              )}
-            </CardBody>
-          </Card>
-        ))}
+                </CardBody>
+              </Card>
+            );
+          })}
       </ul>
       )}
     </Page>
