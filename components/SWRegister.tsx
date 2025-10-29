@@ -3,7 +3,8 @@ import { useEffect } from 'react';
 
 export default function SWRegister() {
   useEffect(() => {
-    if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
+    // Register service worker in production AND development for PWA testing
+    if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js').then((reg) => {
         reg.update().catch(() => {});
       }).catch(() => {});
