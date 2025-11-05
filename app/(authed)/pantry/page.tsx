@@ -5,7 +5,7 @@ import { useIndexedDb } from '@/hooks/useIndexedDb';
 import { usePantrySync } from '@/hooks/usePantrySync';
 import { Button } from '@/components/ui/Button';
 import { createClient } from '@/lib/supabaseClient';
-import { ExpiryBanner } from '@/components/pantry/ExpiryBanner';
+import { ExpiryBanner, daysUntil, getExpiryBadgeTone } from '@/components/pantry/ExpiryBanner';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import { Badge } from '@/components/ui/Badge';
@@ -207,7 +207,12 @@ export default function PantryPage() {
                     <div className="flex-1 flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-gray-900">{it.name}</span>
                       {it.qty != null && <Badge tone="aquamarine">{it.qty}{it.unit ? ` ${it.unit}` : ''}</Badge>}
-                      {it.expiry_date && <Badge tone="amber">Exp: {it.expiry_date}</Badge>}
+                      {it.expiry_date && (
+                        <Badge tone={getExpiryBadgeTone(daysUntil(it.expiry_date))}>
+                          {daysUntil(it.expiry_date) <= 0 ? '🚨 ' : daysUntil(it.expiry_date) <= 3 ? '⚠️ ' : ''}
+                          Exp: {it.expiry_date}
+                        </Badge>
+                      )}
                     </div>
                     <svg 
                       className={`w-5 h-5 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
@@ -234,7 +239,22 @@ export default function PantryPage() {
                         </div>
                         <div className="col-span-2">
                           <span className="text-gray-600">Expiry Date:</span>
-                          <span className="ml-2 font-medium">{it.expiry_date || 'Not set'}</span>
+                          {it.expiry_date ? (
+                            <Badge tone={getExpiryBadgeTone(daysUntil(it.expiry_date))} className="ml-2">
+                              {daysUntil(it.expiry_date) <= 0 ? '🚨 Expired: ' : daysUntil(it.expiry_date) <= 3 ? '⚠️ Soon: ' : ''}
+                              {it.expiry_date}
+                              {daysUntil(it.expiry_date) !== Infinity && (
+                                <span className="ml-1 text-xs">
+                                  ({daysUntil(it.expiry_date) === 0 ? 'Today' : 
+                                    daysUntil(it.expiry_date) === 1 ? 'Tomorrow' :
+                                    daysUntil(it.expiry_date) < 0 ? `${Math.abs(daysUntil(it.expiry_date))}d ago` :
+                                    `${daysUntil(it.expiry_date)}d`})
+                                </span>
+                              )}
+                            </Badge>
+                          ) : (
+                            <span className="ml-2 font-medium text-gray-400">Not set</span>
+                          )}
                         </div>
                       </div>
                       

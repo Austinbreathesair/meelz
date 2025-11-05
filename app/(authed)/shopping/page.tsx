@@ -27,12 +27,17 @@ export default function ShoppingPage() {
     })();
   }, [supabase]);
 
-  const loadIngredients = async () => {
-    const ids = Object.keys(selected).filter((k) => selected[k]);
-    if (!ids.length) { setIngs([]); setList([]); return; }
-    const { data } = await supabase.from('ingredient').select('recipe_id, name, qty, unit, unit_family, position').in('recipe_id', ids).order('position');
-    setIngs((data || []).map((r: any) => ({ name: r.name, qty: r.qty, unit: r.unit, unit_family: r.unit_family, position: r.position })));
-  };
+  // Load ingredients whenever selected recipes change
+  useEffect(() => {
+    const loadIngredients = async () => {
+      const ids = Object.keys(selected).filter((k) => selected[k]);
+      if (!ids.length) { setIngs([]); setList([]); return; }
+      const { data } = await supabase.from('ingredient').select('recipe_id, name, qty, unit, unit_family, position').in('recipe_id', ids).order('position');
+      setIngs((data || []).map((r: any) => ({ name: r.name, qty: r.qty, unit: r.unit, unit_family: r.unit_family, position: r.position })));
+    };
+    
+    loadIngredients();
+  }, [selected, supabase]);
 
   const generate = () => {
     const diff = computeShoppingListMerged(pantry, ings);
@@ -58,7 +63,7 @@ export default function ShoppingPage() {
             <ul className="grid sm:grid-cols-2 gap-2">
               {recipes.map((r) => (
                 <li key={r.id} className="flex items-center gap-2">
-                  <input type="checkbox" checked={!!selected[r.id]} onChange={(e) => { const next = { ...selected, [r.id]: e.target.checked }; setSelected(next); }} onClick={() => setTimeout(loadIngredients, 0)} />
+                  <input type="checkbox" checked={!!selected[r.id]} onChange={(e) => { const next = { ...selected, [r.id]: e.target.checked }; setSelected(next); }} />
                   <span>{r.title}</span>
                 </li>
               ))}
