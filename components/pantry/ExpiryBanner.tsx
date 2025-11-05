@@ -25,12 +25,6 @@ export function getExpiryBadgeTone(days: number): 'red' | 'amber' | 'gray' {
   return 'gray';                     // Not urgent
 }
 
-function getUrgencyLevel(days: number): 'critical' | 'urgent' | 'warning' {
-  if (days <= 0) return 'critical'; // Expired or expiring today
-  if (days <= 2) return 'urgent';   // 1-2 days
-  return 'warning';                  // 3+ days
-}
-
 function getUrgencyStyles(level: 'critical' | 'urgent' | 'warning') {
   switch (level) {
     case 'critical':
@@ -106,7 +100,7 @@ export function ExpiryBanner() {
   const warning = expiringItems.filter(item => item.daysUntil > 2 && item.daysUntil <= 7);
 
   // Determine the most urgent level for the banner color
-  const urgencyLevel = critical.length > 0 ? 'critical' : urgent.length > 0 ? 'urgent' : 'warning';
+  const urgencyLevel: 'critical' | 'urgent' | 'warning' = critical.length > 0 ? 'critical' : urgent.length > 0 ? 'urgent' : 'warning';
   const styles = getUrgencyStyles(urgencyLevel);
 
   const formatDaysText = (days: number) => {
