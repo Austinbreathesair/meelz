@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   // Fetch transactions within range
   const { data: txns } = await supabase
     .from('pantry_txn')
-    .select('ingredient_name, delta_qty_canonical, unit_price, amount, created_at')
+    .select('ingredient_name, delta_qty_canonical, unit_price, amount, created_at, reason, unit_family')
     .eq('user_id', uid)
     .gte('created_at', from.toISOString());
 
@@ -72,5 +72,18 @@ export async function GET(req: NextRequest) {
     total_net: Number(sum(net).toFixed(2))
   };
 
-  return NextResponse.json({ labels, added, used, net, summary, range: days });
+  // Prepare transaction list for table
+  const transactions = (txns || [])
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 100) // Limit to 100 most recent
+    .map((t) => ({
+      date: new Date(t.created_at).toISOString(),
+      ingredient: t.ingredient_name,
+      quantity: t.delta_qty_canonical,
+      unit_family: t.unit_family,
+      amount: typeof t.amount === 'number' ? t.amount : 0,
+      reason: t.reason || (t.delta_qty_canonical > 0 ? 'add' : 'cook')
+    }));
+
+  return NextResponse.json({ labels, added, used, net, summary, range: days, transactions });
 }
