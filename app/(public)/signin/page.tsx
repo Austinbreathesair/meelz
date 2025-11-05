@@ -1,10 +1,14 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabaseClient';
+import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function SignInPage() {
   const supabase = createClient();
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
@@ -22,6 +26,13 @@ export default function SignInPage() {
     }
     return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   };
+
+  // Redirect authenticated users to pantry
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push('/pantry');
+    }
+  }, [user, authLoading, router]);
 
   // Fix hydration error by only rendering after mount
   useEffect(() => {
@@ -127,15 +138,21 @@ export default function SignInPage() {
   };
 
   // Prevent hydration mismatch by not rendering until mounted
-  if (!mounted) {
+  if (!mounted || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-hero">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
-          <div className="text-center text-gray-600">Loading...</div>
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-aquamarine-600"></div>
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
         </div>
       </div>
     );
   }
+
+  // Don't render signin page if user is authenticated
+  if (user) return null;
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-hero">
